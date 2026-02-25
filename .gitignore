@@ -102,3 +102,7 @@ frontend/node_modules/.cache/default-development/1.pack
 # Env files with secrets
 backend/.env
 frontend/.env
+-e 
+# Environment files
+*.env
+*.env.*
