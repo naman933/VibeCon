@@ -100,11 +100,49 @@ export default function UploadDataPage() {
     handleFile(e.dataTransfer.files[0]);
   };
 
+  const handleClear = () => {
+    if (clearType === 'all') {
+      clearAllData();
+      toast.success('All data cleared (queries, uploads, and cycles)');
+    } else {
+      clearUploadedData();
+      toast.success('Queries and upload history cleared');
+    }
+    setLastUpload(null);
+    setShowClearConfirm(false);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="upload-data-page">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Upload Data</h1>
-        <p className="text-sm text-muted-foreground mt-1">Import query data from Excel files</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Upload Data</h1>
+          <p className="text-sm text-muted-foreground mt-1">Import query data from Excel files</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {queries.length > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/10"
+                onClick={() => { setClearType('queries'); setShowClearConfirm(true); }}
+                data-testid="clear-queries-btn"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />Clear Queries ({queries.length})
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/10"
+                onClick={() => { setClearType('all'); setShowClearConfirm(true); }}
+                data-testid="clear-all-data-btn"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />Clear All Data
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Info cards */}
