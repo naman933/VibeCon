@@ -47,6 +47,7 @@ export default function QueryDetailDrawer({ query, onClose }) {
     } else if (currentQuery.aiDraftResponse) {
       setDraftResponse(currentQuery.aiDraftResponse);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuery.ticketId]);
 
   const fetchAI = async () => {
