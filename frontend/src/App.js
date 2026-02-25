@@ -1,53 +1,66 @@
-import { useEffect } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
+import { Toaster } from "@/components/ui/sonner";
+import Layout from "@/components/Layout";
+import LoginPage from "@/pages/LoginPage";
+import UploadDataPage from "@/pages/UploadDataPage";
+import UploadHistoryPage from "@/pages/UploadHistoryPage";
+import AllQueriesPage from "@/pages/AllQueriesPage";
+import MyQueriesPage from "@/pages/MyQueriesPage";
+import EscalationQueuePage from "@/pages/EscalationQueuePage";
+import EscalationRepositoryPage from "@/pages/EscalationRepositoryPage";
+import SLAMonitorPage from "@/pages/SLAMonitorPage";
+import AnalyticsPage from "@/pages/AnalyticsPage";
+import ReportsPage from "@/pages/ReportsPage";
+import UserManagementPage from "@/pages/UserManagementPage";
+import CycleManagementPage from "@/pages/CycleManagementPage";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+function ProtectedRoute({ children, adminOnly = false }) {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/my-queries" replace />;
+  return children;
+}
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+function AppRoutes() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/upload" replace /> : <LoginPage />} />
+      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route index element={<Navigate to="/upload" replace />} />
+        <Route path="upload" element={<UploadDataPage />} />
+        <Route path="upload-history" element={<UploadHistoryPage />} />
+        <Route path="all-queries" element={<ProtectedRoute adminOnly><AllQueriesPage /></ProtectedRoute>} />
+        <Route path="my-queries" element={<MyQueriesPage />} />
+        <Route path="escalation-queue" element={<EscalationQueuePage />} />
+        <Route path="escalation-repository" element={<EscalationRepositoryPage />} />
+        <Route path="sla-monitor" element={<SLAMonitorPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="reports" element={<ProtectedRoute adminOnly><ReportsPage /></ProtectedRoute>} />
+        <Route path="user-management" element={<ProtectedRoute adminOnly><UserManagementPage /></ProtectedRoute>} />
+        <Route path="cycle-management" element={<ProtectedRoute adminOnly><CycleManagementPage /></ProtectedRoute>} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
-};
+}
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthProvider>
+      <DataProvider>
+        <BrowserRouter>
+          <Toaster position="top-right" richColors />
+          <AppRoutes />
+        </BrowserRouter>
+      </DataProvider>
+    </AuthProvider>
   );
 }
 

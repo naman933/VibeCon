@@ -1,72 +1,76 @@
 from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import json
+import httpx
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
-
+from pydantic import BaseModel
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
 app = FastAPI()
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+class AnalyzeRequest(BaseModel):
+    description: str
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "AQIS API Running"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+@api_router.post("/ai/analyze")
+async def analyze_query(req: AnalyzeRequest):
+    groq_key = os.environ.get('GROQ_API_KEY', '')
+    if not groq_key:
+        return {"error": "GROQ_API_KEY not configured"}
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+    system_msg = "You are an admissions query analyst. Analyze the candidate's query and return a JSON object only, with no extra text."
+    user_msg = f'''Analyze this admissions query and return ONLY a valid JSON object with these exact keys:
+{{
+  "summary": "2-3 sentence plain English summary of what the candidate is asking",
+  "intent": "one of: Information Request | Document Submission | Payment Issue | Technical Problem | Eligibility Clarification | Complaint | Other",
+  "urgency": "one of: High | Medium | Low",
+  "urgencyReason": "one short sentence explaining why this urgency level was assigned",
+  "draftResponse": "a polite, professional 3-5 sentence draft reply to the candidate that addresses their query. Do not use placeholders. Write as if from the admissions team."
+}}
 
-# Include the router in the main app
+Candidate Query: {req.description}'''
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {groq_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "llama3-8b-8192",
+                    "messages": [
+                        {"role": "system", "content": system_msg},
+                        {"role": "user", "content": user_msg}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 1024
+                }
+            )
+            data = resp.json()
+            content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
+            try:
+                return json.loads(content)
+            except json.JSONDecodeError:
+                start = content.find('{')
+                end = content.rfind('}') + 1
+                if start >= 0 and end > start:
+                    return json.loads(content[start:end])
+                return {"error": "Could not parse AI response", "raw": content}
+    except Exception as e:
+        logging.error(f"Groq API error: {e}")
+        return {"error": str(e)}
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,13 +81,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
