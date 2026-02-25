@@ -18,7 +18,7 @@ import {
   Brain, Tag, Zap, MessageSquare, CalendarDays, Clock
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || '';
 
 export default function QueryDetailDrawer({ query, onClose }) {
   const { updateQuery, queries } = useData();

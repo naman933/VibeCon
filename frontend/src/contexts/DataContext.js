@@ -125,12 +125,26 @@ export function DataProvider({ children }) {
     bump();
   };
 
+  const clearUploadedData = () => {
+    storage.setQueries([]);
+    storage.setUploads([]);
+    bump();
+  };
+
+  const clearAllData = () => {
+    storage.setQueries([]);
+    storage.setUploads([]);
+    storage.setCycles([]);
+    bump();
+  };
+
   return (
     <DataContext.Provider value={{
       queries, cycles, uploads, users, activeCycle, ver,
       addCycle, setActiveCycle,
       importQueries, updateQuery,
       addUser, updateUser, bump,
+      clearUploadedData, clearAllData,
     }}>
       {children}
     </DataContext.Provider>
