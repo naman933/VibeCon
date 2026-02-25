@@ -54,6 +54,12 @@ Build a full-stack Admissions Query Intelligence System with React + Tailwind CS
 - [x] SLA breach row highlighting
 - [x] Similarity suggestions in drawer
 
+## Vercel Deployment
+- `frontend/vercel.json` configured with SPA rewrites
+- `frontend/api/ai/analyze.js` serverless function for Groq AI proxy
+- Set `REACT_APP_BACKEND_URL` to empty string `""` on Vercel
+- Set `GROQ_API_KEY` in Vercel Environment Variables
+
 ## Prioritized Backlog
 ### P0 (Done)
 - All core features implemented
