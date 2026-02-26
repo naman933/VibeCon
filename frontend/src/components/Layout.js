@@ -45,6 +45,16 @@ export default function Layout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState({});
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+
+  // Auto-trigger tour on first login
+  useEffect(() => {
+    const completed = localStorage.getItem(TOUR_KEY);
+    if (!completed) {
+      const timer = setTimeout(() => setTourOpen(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const toggleSection = (label) => {
     setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
