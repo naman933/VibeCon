@@ -251,6 +251,9 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Guided Tour */}
+      <GuidedTour open={tourOpen} onClose={() => setTourOpen(false)} />
     </div>
   );
 }
