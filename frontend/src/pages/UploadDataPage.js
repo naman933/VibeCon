@@ -342,6 +342,35 @@ export default function UploadDataPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Cycle Dialog */}
+      <Dialog open={showCreateCycle} onOpenChange={setShowCreateCycle}>
+        <DialogContent data-testid="inline-create-cycle-dialog">
+          <DialogHeader>
+            <DialogTitle>Create New Admission Cycle</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-xs">Cycle Name *</Label>
+              <Input value={newCycle.name} onChange={(e) => setNewCycle(p => ({ ...p, name: e.target.value }))} placeholder="e.g., MBA 2025-26 Batch 1" data-testid="inline-cycle-name-input" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Start Date *</Label>
+                <Input type="date" value={newCycle.startDate} onChange={(e) => setNewCycle(p => ({ ...p, startDate: e.target.value }))} data-testid="inline-cycle-start-input" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">End Date *</Label>
+                <Input type="date" value={newCycle.endDate} onChange={(e) => setNewCycle(p => ({ ...p, endDate: e.target.value }))} data-testid="inline-cycle-end-input" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateCycle(false)} data-testid="inline-cycle-cancel-btn">Cancel</Button>
+            <Button onClick={handleCreateCycle} className="bg-blue-500 hover:bg-blue-600 text-white" data-testid="inline-cycle-submit-btn">Create Cycle</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
