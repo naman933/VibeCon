@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from 'next-themes';
 import { Badge } from '@/components/ui/badge';
+import GuidedTour, { TOUR_KEY } from '@/components/GuidedTour';
 import {
   Upload, History, List, UserCheck, AlertTriangle, Archive,
   Clock, BarChart3, FileText, Users, Settings, ChevronDown,
   ChevronRight, LogOut, Sun, Moon, FileSpreadsheet, Menu, X,
-  CalendarDays, Folder, Briefcase
+  CalendarDays, Folder, Briefcase, HelpCircle
 } from 'lucide-react';
 
 const navSections = [
