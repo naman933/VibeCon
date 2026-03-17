@@ -6,7 +6,8 @@ import {
   Upload, List, UserCheck, AlertTriangle, Archive, Clock,
   BarChart3, FileText, Users, Brain, CheckCircle2, Ban,
   CalendarDays, FileSpreadsheet, ChevronRight, ChevronLeft,
-  Rocket, ShieldCheck, Zap, Target, ArrowRight
+  Rocket, ShieldCheck, Zap, Target, ArrowRight, FileSearch,
+  ToggleRight, UserCog
 } from 'lucide-react';
 
 const TOUR_KEY = 'aqis_tour_completed';
@@ -17,10 +18,10 @@ const adminSteps = [
     color: 'bg-blue-500',
     title: 'Welcome to AQIS',
     subtitle: 'Your Admissions Query Intelligence System',
-    description: 'AQIS helps you manage admissions queries with AI-powered analysis, automated prioritization, and real-time SLA monitoring. This guide walks you through the complete workflow.',
+    description: 'AQIS helps you manage admissions queries with AI-powered analysis, automated prioritization, real-time SLA monitoring, document verification, and selective query assignment.',
     tips: [
       'The left sidebar is your main navigation',
-      'All data is stored in your browser (localStorage)',
+      'User accounts are stored securely in Supabase database',
       'Dark/light theme toggle is in the top-right header',
     ],
     highlight: null,
@@ -44,12 +45,12 @@ const adminSteps = [
     color: 'bg-emerald-500',
     title: 'Step 2: Upload Query Data',
     subtitle: 'Upload Data page',
-    description: 'Upload your Excel (.xlsx) file exported from Meritto. The system parses the data, skips duplicates, auto-assigns queries to team members, and calculates priority scores.',
+    description: 'Upload your Excel (.xlsx) file exported from Meritto. The system parses the data, skips duplicates, and assigns queries to members in the active assignment pool.',
     tips: [
       'Drag & drop or click to browse for the .xlsx file',
-      'Queries are auto-assigned to the member with the fewest open queries',
+      'Step 3 "Assignment Pool" shows who will receive queries',
+      'Click "Override" to include/exclude specific members for this upload',
       'Priority is calculated based on category weight + days pending',
-      'Use "Clear Queries" to reset data and re-upload',
     ],
     highlight: '/upload',
   },
@@ -142,14 +143,43 @@ const adminSteps = [
     color: 'bg-pink-500',
     title: 'Step 9: Manage Your Team',
     subtitle: 'User Management page (Admin only)',
-    description: 'Add new team members, control admin access, and reset passwords. AdCom Members can be granted temporary admin access via the toggle.',
+    description: 'Add, edit, and delete team members. Control admin access and manage who is available for query assignment. All user data is stored in the Supabase database.',
     tips: [
       'Add User: create new accounts with name, email, username, and role',
-      'Admin Access toggle: grant/revoke admin privileges for AdCom Members',
-      'Reset Password: update passwords for any team member',
-      'Two roles: Admin (full access) and AdCom Member (assigned queries only)',
+      'Delete User: remove accounts that are no longer needed',
+      'Available toggle: controls if a member receives new query assignments',
+      'Open Queries column: see each member\'s current workload at a glance',
     ],
     highlight: '/user-management',
+  },
+  {
+    icon: ToggleRight,
+    color: 'bg-orange-500',
+    title: 'Step 10: Selective Query Assignment',
+    subtitle: 'User Management + Upload Data pages',
+    description: 'Control which members receive queries. Set permanent availability in User Management, or use per-upload overrides on the Upload Data page for temporary adjustments.',
+    tips: [
+      'User Management: toggle the "Available" switch to exclude a member',
+      'Toggling off auto-redistributes their open queries to available members',
+      'Upload Data: click "Override" in the Assignment Pool to adjust for one upload',
+      'Overrides are temporary and don\'t change permanent settings',
+    ],
+    highlight: '/user-management',
+  },
+  {
+    icon: FileSearch,
+    color: 'bg-teal-500',
+    title: 'Step 11: Document Verification',
+    subtitle: 'Document Verification page',
+    description: 'Bulk-verify candidate CAT scorecards (PDFs) against your Form A data (CSV/Excel). The system extracts registration numbers, percentiles, and other fields from scorecards and compares them automatically.',
+    tips: [
+      'Upload your Form A data (CSV or Excel) with candidate details',
+      'Upload one or more CAT scorecard PDFs',
+      'Click "Run Verification" to start the automated comparison',
+      'View results as Verified, Discrepancy, Needs Review, or Missing Document',
+      'Export the verification report as CSV or JSON',
+    ],
+    highlight: '/document-verification',
   },
 ];
 
@@ -159,10 +189,10 @@ const memberSteps = [
     color: 'bg-blue-500',
     title: 'Welcome to AQIS',
     subtitle: 'Your Query Management Dashboard',
-    description: 'AQIS helps you manage your assigned admissions queries efficiently with AI-powered analysis. This guide walks you through your workflow.',
+    description: 'AQIS helps you manage your assigned admissions queries efficiently with AI-powered analysis and document verification. This guide walks you through your workflow.',
     tips: [
       'The left sidebar is your main navigation',
-      'Your admin has uploaded query data and assigned queries to you',
+      'Your admin uploads queries and assigns them to available members',
       'Dark/light theme toggle is in the top-right header',
     ],
     highlight: null,
@@ -234,6 +264,20 @@ const memberSteps = [
       'Check the Escalation Repository for solutions to similar past queries',
     ],
     highlight: '/analytics',
+  },
+  {
+    icon: FileSearch,
+    color: 'bg-teal-500',
+    title: 'Step 6: Document Verification',
+    subtitle: 'Document Verification page',
+    description: 'Verify candidate CAT scorecards against Form A data. Upload the candidate list and scorecard PDFs to automatically compare registration numbers, percentiles, and more.',
+    tips: [
+      'Upload Form A data (CSV/Excel) and CAT scorecard PDFs',
+      'Results show Verified, Discrepancy, Needs Review, or Missing Document',
+      'Expand each row to see a side-by-side value comparison',
+      'Export the report as CSV or JSON for records',
+    ],
+    highlight: '/document-verification',
   },
 ];
 
