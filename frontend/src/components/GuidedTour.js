@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Upload, List, UserCheck, AlertTriangle, Archive, Clock,
@@ -259,6 +259,7 @@ export default function GuidedTour({ open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={() => handleFinish()}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden gap-0" data-testid="guided-tour-dialog">
+        <DialogTitle className="sr-only">AQIS Guided Tour</DialogTitle>
         {/* Header gradient */}
         <div className={`${current.color} px-6 py-8 text-white relative overflow-hidden`}>
           <div className="absolute inset-0 bg-black/10" />

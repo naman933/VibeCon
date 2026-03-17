@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -271,7 +271,7 @@ export default function DocumentVerificationPage() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((r, i) => (
-                    <>
+                    <React.Fragment key={`row-group-${i}`}>
                       <TableRow
                         key={`row-${i}`}
                         className={`cursor-pointer ${r.status === 'DISCREPANCY' ? 'sla-breach-row' : r.status === 'MISSING_DOCUMENT' ? 'bg-gray-50/50 dark:bg-gray-500/5' : ''}`}
@@ -315,7 +315,7 @@ export default function DocumentVerificationPage() {
                           </TableCell>
                         </TableRow>
                       )}
-                    </>
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
