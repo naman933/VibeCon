@@ -401,6 +401,8 @@ def match_and_verify(candidates, scorecards):
             'pdf_confidence': best_match['confidence'] if best_match else None,
             'status': 'VERIFIED',
             'fields': {},
+            'form_values': {},
+            'pdf_values': {},
             'issues': [],
         }
 
@@ -426,6 +428,8 @@ def match_and_verify(candidates, scorecards):
         def compare_exact(field_label, form_val, pdf_val):
             f = str(form_val or '').strip().upper()
             p = str(pdf_val or '').strip().upper()
+            entry['form_values'][field_label] = str(form_val or '') if form_val else None
+            entry['pdf_values'][field_label] = str(pdf_val or '') if pdf_val else None
             if not f and not p:
                 entry['fields'][field_label] = 'both_empty'
             elif not p:
@@ -442,6 +446,8 @@ def match_and_verify(candidates, scorecards):
         def compare_percentile(field_label, form_val, pdf_val, tolerance=0.1):
             fv = parse_number(form_val)
             pv = parse_number(pdf_val)
+            entry['form_values'][field_label] = fv
+            entry['pdf_values'][field_label] = pv
             if fv is None and pv is None:
                 entry['fields'][field_label] = 'both_empty'
             elif pv is None:

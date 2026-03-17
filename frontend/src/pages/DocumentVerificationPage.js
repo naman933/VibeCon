@@ -115,6 +115,7 @@ export default function DocumentVerificationPage() {
     setCsvFile(null);
     setPdfFiles([]);
     toast.success('Results cleared');
+    setTimeout(() => window.location.reload(), 300);
   };
 
   const filtered = data?.results?.filter(r => {
@@ -296,13 +297,57 @@ export default function DocumentVerificationPage() {
                       {expandedRow === i && (
                         <TableRow key={`detail-${i}`}>
                           <TableCell colSpan={12} className="bg-muted/20 p-4">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               <div className="flex items-center gap-2 text-xs">
                                 <span className="font-semibold text-muted-foreground">Match Method:</span>
                                 <Badge variant="outline" className="text-[10px]">{r.match_method || 'None'}</Badge>
                                 <span className="font-semibold text-muted-foreground ml-3">PDF Confidence:</span>
                                 <Badge variant="outline" className={`text-[10px] ${r.pdf_confidence === 'high' ? 'text-green-600' : r.pdf_confidence === 'medium' ? 'text-amber-600' : 'text-red-600'}`}>{r.pdf_confidence || '-'}</Badge>
+                                {r.pdf_filename && (
+                                  <><span className="font-semibold text-muted-foreground ml-3">PDF File:</span>
+                                  <span className="text-xs text-foreground">{r.pdf_filename}</span></>
+                                )}
                               </div>
+
+                              {/* Values Comparison Table */}
+                              {r.form_values && r.pdf_values && Object.keys(r.fields || {}).length > 0 && (
+                                <div className="rounded-md border overflow-hidden">
+                                  <table className="w-full text-xs" data-testid={`values-table-${i}`}>
+                                    <thead>
+                                      <tr className="bg-muted/50">
+                                        <th className="text-left px-3 py-1.5 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Field</th>
+                                        <th className="text-left px-3 py-1.5 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Form A Value</th>
+                                        <th className="text-left px-3 py-1.5 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">PDF Value</th>
+                                        <th className="text-left px-3 py-1.5 font-bold text-muted-foreground uppercase tracking-wider text-[10px]">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {[
+                                        { key: 'cat_reg_no', label: 'CAT Reg No' },
+                                        { key: 'date_of_test', label: 'Date of Test' },
+                                        { key: 'varc', label: 'VARC Percentile' },
+                                        { key: 'dilr', label: 'DILR Percentile' },
+                                        { key: 'qa', label: 'QA Percentile' },
+                                        { key: 'overall', label: 'Overall Percentile' },
+                                      ].map(f => {
+                                        const status = r.fields?.[f.key];
+                                        if (!status || status === 'both_empty') return null;
+                                        const formVal = r.form_values?.[f.key];
+                                        const pdfVal = r.pdf_values?.[f.key];
+                                        return (
+                                          <tr key={f.key} className={status === 'mismatch' ? 'bg-red-50/50 dark:bg-red-500/5' : ''}>
+                                            <td className="px-3 py-1.5 font-medium">{f.label}</td>
+                                            <td className="px-3 py-1.5 font-mono">{formVal != null ? String(formVal) : '-'}</td>
+                                            <td className="px-3 py-1.5 font-mono">{pdfVal != null ? String(pdfVal) : '-'}</td>
+                                            <td className="px-3 py-1.5"><FieldStatus val={status} /></td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+
                               {r.issues && r.issues.length > 0 && (
                                 <div>
                                   <span className="text-xs font-semibold text-red-600 dark:text-red-400">Issues:</span>
