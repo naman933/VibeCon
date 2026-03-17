@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime, func
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, func
 
 from database import Base
 
@@ -29,3 +29,11 @@ class User(Base):
             'role': self.role,
             'isAdminAccess': self.is_admin_access,
         }
+
+
+class Heartbeat(Base):
+    __tablename__ = 'heartbeat'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    last_ping = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    source = Column(String(100), default='unknown')

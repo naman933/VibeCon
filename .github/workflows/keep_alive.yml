@@ -1,0 +1,64 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Run every 2 days at 06:00 UTC
+    - cron: '0 6 */2 * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Ping Supabase Keep-Alive Endpoint
+        id: ping
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.APP_URL }}/api/keep-alive" \
+            -H "Content-Type: application/json" \
+            -H "X-Keepalive-Token: ${{ secrets.KEEPALIVE_SECRET }}" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 10)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Keep-alive ping failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "Keep-alive ping successful"
+
+      - name: Fallback - Direct DB Ping
+        if: failure()
+        run: |
+          # If the API endpoint fails, try a direct lightweight query
+          # This requires SUPABASE_URL and SUPABASE_KEY secrets
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/heartbeat?select=id,last_ping&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}" \
+            --max-time 15 \
+            --retry 2 \
+            --retry-delay 5)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Fallback HTTP Status: $HTTP_CODE"
+          echo "Fallback Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Fallback ping also failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "Fallback ping successful - DB is alive"

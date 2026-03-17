@@ -99,6 +99,52 @@ async def verify_documents(
 # --- Auth & User Management ---
 from auth import auth_router, users_router
 
+# --- Keep-Alive Endpoint ---
+from fastapi import Header, HTTPException as FastHTTPException
+from sqlalchemy import select, func as sa_func
+from database import get_db, AsyncSession
+from models import Heartbeat
+from fastapi import Depends
+
+KEEPALIVE_SECRET = os.environ.get('KEEPALIVE_SECRET', '')
+
+@api_router.post("/keep-alive")
+async def keep_alive(
+    x_keepalive_token: str = Header(None),
+    db: AsyncSession = Depends(get_db),
+):
+    if not KEEPALIVE_SECRET or x_keepalive_token != KEEPALIVE_SECRET:
+        raise FastHTTPException(status_code=403, detail="Forbidden")
+
+    # Update the heartbeat row (id=1) or insert if missing
+    result = await db.execute(select(Heartbeat).where(Heartbeat.id == 1))
+    hb = result.scalar_one_or_none()
+    if hb:
+        hb.last_ping = sa_func.now()
+        hb.source = 'github_actions'
+    else:
+        db.add(Heartbeat(last_ping=sa_func.now(), source='github_actions'))
+    await db.commit()
+
+    # Return current timestamp for verification
+    result = await db.execute(select(Heartbeat).where(Heartbeat.id == 1))
+    hb = result.scalar_one_or_none()
+    return {
+        "status": "alive",
+        "last_ping": hb.last_ping.isoformat() if hb else None,
+        "source": hb.source if hb else None,
+    }
+
+@api_router.get("/health")
+async def health_check(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Heartbeat).where(Heartbeat.id == 1))
+    hb = result.scalar_one_or_none()
+    return {
+        "status": "healthy",
+        "db_connected": True,
+        "last_heartbeat": hb.last_ping.isoformat() if hb else None,
+    }
+
 app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(users_router)
