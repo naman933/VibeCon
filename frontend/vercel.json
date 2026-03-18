@@ -3,7 +3,14 @@
   "buildCommand": "yarn build",
   "outputDirectory": "build",
   "rewrites": [
+    { "source": "/api/auth/login", "destination": "/api/auth/login" },
     { "source": "/api/ai/analyze", "destination": "/api/ai/analyze" },
+    { "source": "/api/users/:id", "destination": "/api/users/[id]" },
+    { "source": "/api/users", "destination": "/api/users/index" },
+    { "source": "/api/docverify/verify", "destination": "/api/docverify/verify" },
+    { "source": "/api/keep-alive", "destination": "/api/keep-alive" },
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api", "destination": "/api/health" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -11,8 +18,8 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-Keepalive-Token" }
       ]
     }
   ]
