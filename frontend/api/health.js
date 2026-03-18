@@ -1,4 +1,4 @@
-const { setCors, supabaseQuery } = require('../_supabase');
+const { setCors, supabaseQuery } = require('./_supabase');
 
 export default async function handler(req, res) {
   setCors(res);

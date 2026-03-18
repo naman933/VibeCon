@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { setCors, supabaseQuery } = require('../_supabase');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 function formatUser(u) {
   return {
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
       const hash = await bcrypt.hash(password, 10);
       const newUser = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         username,
         password_hash: hash,
         name,
