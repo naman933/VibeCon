@@ -104,17 +104,13 @@ export default function InsightEngine({ scores, insight }) {
   return (
     // Outer: mount slide-up animation
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 2.5, duration: 0.65, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ delay: 1.0, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="sim-panel fixed bottom-6 right-10 lg:bottom-8 lg:right-14 z-50 w-[280px] lg:w-[300px]"
       style={{ fontFamily: 'Inter, sans-serif' }}
     >
-      {/* Inner: continuous float bob (out of phase with ControlPanel) */}
-      <motion.div
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 6.0, repeat: Infinity, ease: 'easeInOut', delay: 1.6 }}
-      >
+      <div>
         <motion.div
           className="rounded-2xl overflow-hidden"
           animate={{
@@ -206,7 +202,7 @@ export default function InsightEngine({ scores, insight }) {
             )}
           </AnimatePresence>
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }

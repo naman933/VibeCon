@@ -43,8 +43,8 @@ export default function SectionOverlay({ activeSection }) {
   const s = SECTIONS[activeSection]
 
   return (
-    // Positioned in the upper-centre — clear of both bottom panels
-    <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center pb-8">
+    // Centred vertically but shifted up with bottom padding to clear the floating panels
+    <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center" style={{ paddingBottom: '220px', paddingTop: '72px' }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={s.id}

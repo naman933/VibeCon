@@ -140,17 +140,13 @@ export default function ControlPanel({ values, update, reset, score, dominant })
   return (
     // Outer: mount slide-up animation
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 2.2, duration: 0.65, ease: [0.25, 0.1, 0.25, 1] }}
+      transition={{ delay: 0.8, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="sim-panel fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-50 w-[290px] lg:w-[310px]"
       style={{ fontFamily: 'Inter, sans-serif' }}
     >
-      {/* Inner: continuous float bob */}
-      <motion.div
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut', delay: 1.0 }}
-      >
+      <div>
         <motion.div
           className="rounded-2xl overflow-hidden"
           animate={{
@@ -234,7 +230,7 @@ export default function ControlPanel({ values, update, reset, score, dominant })
             )}
           </AnimatePresence>
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
