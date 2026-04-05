@@ -5,7 +5,7 @@ import IntroScreen from '@/components/IntroScreen'
 import SimCanvas from '@/components/SimCanvas'
 import SectionOverlay, { SECTIONS } from '@/components/SectionOverlay'
 import ScrollNav from '@/components/ScrollNav'
-import ControlPanel from '@/components/ControlPanel'
+import TradeoffControl from '@/components/TradeoffControl'
 import InsightEngine from '@/components/InsightEngine'
 import NarrativeOverlay from '@/components/NarrativeOverlay'
 import JourneyBadge from '@/components/JourneyBadge'
@@ -165,7 +165,7 @@ export default function App() {
 
           <ScrollNav activeSection={activeSection} onDotClick={handleDotClick} />
 
-          <ControlPanel
+          <TradeoffControl
             values={values}
             update={update}
             reset={reset}
