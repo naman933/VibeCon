@@ -1,25 +1,22 @@
 {
-  "installCommand": "yarn install",
   "buildCommand": "yarn build",
-  "outputDirectory": "build",
+  "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/auth/login", "destination": "/api/auth/login" },
-    { "source": "/api/ai/analyze", "destination": "/api/ai/analyze" },
-    { "source": "/api/users/:id", "destination": "/api/users/[id]" },
-    { "source": "/api/users", "destination": "/api/users/index" },
-    { "source": "/api/docverify/verify", "destination": "/api/docverify/verify" },
-    { "source": "/api/keep-alive", "destination": "/api/keep-alive" },
-    { "source": "/api/health", "destination": "/api/health" },
-    { "source": "/api", "destination": "/api/health" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/assets/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, X-Keepalive-Token" }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
   ]
