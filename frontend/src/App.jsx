@@ -21,7 +21,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState(0)
   const [hasScrolled, setHasScrolled]     = useState(false)
 
-  const { values, update, reset, score, dominant, scores, insight, impacts } = useSimulator()
+  const { values, update, updateAll, reset, score, dominant, scores, insight, impacts } = useSimulator()
   const { activeStep, stepIndex, advance, dismiss, isComplete }     = useNarrative({ values, hasScrolled })
 
   // Track window scroll — NOT a ref. This never breaks fixed children.
@@ -168,6 +168,7 @@ export default function App() {
           <TradeoffControl
             values={values}
             update={update}
+            updateAll={updateAll}
             reset={reset}
             score={score}
             dominant={dominant}

@@ -1,16 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function Count({ value, prefix = '', suffix = '' }) {
   const spring  = useSpring(value, { stiffness: 60, damping: 18 })
   const display = useTransform(spring, v => `${prefix}${Math.round(v)}${suffix}`)
+  useEffect(() => { spring.set(value) }, [value, spring])
   return <motion.span>{display}</motion.span>
 }
 
 function CountFloat({ value, decimals = 1, prefix = '', suffix = '' }) {
   const spring  = useSpring(value, { stiffness: 60, damping: 18 })
   const display = useTransform(spring, v => `${prefix}${v.toFixed(decimals)}${suffix}`)
+  useEffect(() => { spring.set(value) }, [value, spring])
   return <motion.span>{display}</motion.span>
 }
 

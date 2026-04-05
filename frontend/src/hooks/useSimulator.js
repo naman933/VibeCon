@@ -131,6 +131,11 @@ export function useSimulator() {
     setValues(prev => ({ ...prev, [key]: Number(val) }))
   }, [])
 
+  // Atomic update for all three at once — avoids three separate renders
+  const updateAll = useCallback((newVals) => {
+    setValues(prev => ({ ...prev, ...newVals }))
+  }, [])
+
   const reset = useCallback(() => setValues(DEFAULTS), [])
 
   const scores = useMemo(() => deriveScores(values), [values])

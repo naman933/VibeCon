@@ -76,7 +76,7 @@ function ScoreRing({ score, color }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function TradeoffControl({ values, update, reset, score, dominant }) {
+export default function TradeoffControl({ values, update, updateAll, reset, score, dominant }) {
   const svgRef     = useRef(null)
   const dragging   = useRef(false)
   const [puck, setPuck]     = useState(CENTROID)
@@ -96,10 +96,8 @@ export default function TradeoffControl({ values, update, reset, score, dominant
     const clamped = clamp(raw)
     setPuck(clamped)
     const v = baryToValues(clamped)
-    update('speed',          v.speed)
-    update('cost',           v.cost)
-    update('sustainability', v.sustainability)
-  }, [update])
+    updateAll({ speed: v.speed, cost: v.cost, sustainability: v.sustainability })
+  }, [updateAll])
 
   const getSVGPos = useCallback((e) => {
     const rect = svgRef.current.getBoundingClientRect()
