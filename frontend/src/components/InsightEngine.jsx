@@ -1,159 +1,227 @@
 import { useState } from 'react'
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function scoreColor(v) {
-  if (v >= 70) return '#10b981'
-  if (v >= 45) return '#6366f1'
-  if (v >= 25) return '#f59e0b'
-  return '#ef4444'
-}
-
-function scoreLabel(v) {
-  if (v >= 70) return 'Excellent'
-  if (v >= 45) return 'Good'
-  if (v >= 25) return 'Moderate'
-  return 'Critical'
-}
-
-function AnimatedNumber({ value }) {
-  const spring  = useSpring(value, { stiffness: 80, damping: 20 })
-  const display = useTransform(spring, v => String(Math.round(v)))
+// ── Animated counter ──────────────────────────────────────────────────────────
+function Count({ value, prefix = '', suffix = '' }) {
+  const spring  = useSpring(value, { stiffness: 60, damping: 18 })
+  const display = useTransform(spring, v => `${prefix}${Math.round(v)}${suffix}`)
   return <motion.span>{display}</motion.span>
 }
 
-// ── Metric row with glowing bar ───────────────────────────────────────────────
-const METRIC_META = {
-  satisfaction: { label: 'Customer Satisfaction', icon: '😊' },
-  costHealth:   { label: 'Cost Health',            icon: '💰' },
-  envImpact:    { label: 'Eco Score',              icon: '🌿' },
+function CountFloat({ value, decimals = 1, prefix = '', suffix = '' }) {
+  const spring  = useSpring(value, { stiffness: 60, damping: 18 })
+  const display = useTransform(spring, v => `${prefix}${v.toFixed(decimals)}${suffix}`)
+  return <motion.span>{display}</motion.span>
 }
 
-function MetricRow({ metricKey, value }) {
-  const { label, icon } = METRIC_META[metricKey]
-  const color  = scoreColor(value)
-  const status = scoreLabel(value)
-
-  // Glow intensity on the bar grows when score is high
-  const barGlow = value > 55 ? `0 0 ${Math.round((value - 55) * 0.18)}px ${color}99` : 'none'
+// ── Comparison bar (vs industry baseline at 50) ───────────────────────────────
+function CompareBar({ value, color, invert = false }) {
+  // bar is centred at 50%; left half = below avg, right half = above avg
+  const pct   = Math.round(value)
+  const above = pct >= 50
+  const width = Math.abs(pct - 50) // 0–50
+  const left  = above ? 50 : pct
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm leading-none">{icon}</span>
-          <span className="text-xs font-medium text-white/60">{label}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <motion.span
-            key={status}
-            initial={{ opacity: 0, y: -3 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-            style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
-          >
-            {status}
-          </motion.span>
-          <span className="text-sm font-bold tabular-nums text-white" style={{ minWidth: 26, textAlign: 'right' }}>
-            <AnimatedNumber value={value} />
-          </span>
-        </div>
-      </div>
-
-      {/* Bar track */}
-      <div
-        className="h-1 w-full rounded-full overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.07)' }}
-      >
-        <motion.div
-          className="h-full rounded-full"
-          animate={{
-            width: `${value}%`,
-            background: color,
-            boxShadow: barGlow,
-          }}
-          transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
-        />
-      </div>
+    <div className="relative h-1 w-full rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }}>
+      {/* Baseline tick */}
+      <div className="absolute top-0 bottom-0 w-px bg-white/20" style={{ left: '50%' }} />
+      {/* Filled region */}
+      <motion.div
+        className="absolute top-0 bottom-0 rounded-full"
+        animate={{ left: `${left}%`, width: `${width}%`, background: above ? color : '#ef4444' }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+      />
     </div>
   )
 }
 
-// ── Live pinging dot ──────────────────────────────────────────────────────────
+// ── Live dot ─────────────────────────────────────────────────────────────────
 function LiveDot() {
   return (
-    <span className="relative flex h-2 w-2">
+    <span className="relative flex h-2 w-2 flex-shrink-0">
       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
     </span>
   )
 }
 
-// ── Panel ─────────────────────────────────────────────────────────────────────
-export default function InsightEngine({ scores, insight }) {
+// ── Impact card ───────────────────────────────────────────────────────────────
+function ImpactCard({ config, score }) {
+  const { color, icon, label, primary, unit, analogy, analogyIcon, score: scoreVal, compareLabel } = config
+
+  const isPositive = scoreVal >= 50
+
+  return (
+    <motion.div
+      layout
+      className="rounded-xl p-3.5 flex flex-col gap-2.5"
+      style={{
+        background: `${color}0a`,
+        border: `1px solid ${color}22`,
+      }}
+    >
+      {/* Top row: icon + label + pill */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base leading-none">{icon}</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color }}>
+            {label}
+          </span>
+        </div>
+        <span
+          className="text-[9px] font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            color: isPositive ? color : '#ef4444',
+            background: isPositive ? `${color}15` : 'rgba(239,68,68,0.12)',
+            border: `1px solid ${isPositive ? color + '30' : 'rgba(239,68,68,0.25)'}`,
+          }}
+        >
+          {isPositive ? '▲' : '▼'} {isPositive ? 'Above avg' : 'Below avg'}
+        </span>
+      </div>
+
+      {/* Primary metric — big number */}
+      <div className="flex items-end gap-1.5 leading-none">
+        <span className="text-3xl font-bold text-white tabular-nums tracking-tight">
+          {primary}
+        </span>
+        <span className="text-xs text-white/40 mb-0.5 font-medium">{unit}</span>
+      </div>
+
+      {/* vs industry bar */}
+      <div className="flex flex-col gap-1">
+        <CompareBar value={scoreVal} color={color} />
+        <div className="flex justify-between">
+          <span className="text-[9px] text-white/25">Worst</span>
+          <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{compareLabel}</span>
+          <span className="text-[9px] text-white/25">Best</span>
+        </div>
+      </div>
+
+      {/* Analogy line */}
+      <div
+        className="flex items-start gap-1.5 rounded-lg px-2.5 py-2"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span className="text-sm leading-none flex-shrink-0 mt-px">{analogyIcon}</span>
+        <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          {analogy}
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Main panel ────────────────────────────────────────────────────────────────
+export default function InsightEngine({ scores, insight, impacts }) {
   const [open, setOpen] = useState(true)
 
   const { satisfaction, costHealth, envImpact } = scores
-  const overall      = Math.round((satisfaction + costHealth + envImpact) / 3)
-  const overallColor = scoreColor(overall)
+  const { satisfaction: sat, cost, env }         = impacts
 
-  // Panel glow scales with overall health
-  const glowSize  = Math.round(20 + (overall / 100) * 40)
-  const glowAlpha = Math.round((overall / 100) * 48).toString(16).padStart(2, '0')
+  const overall      = Math.round((satisfaction + costHealth + envImpact) / 3)
+  const overallColor = overall >= 65 ? '#10b981' : overall >= 40 ? '#6366f1' : '#f59e0b'
+  const glowAlpha    = Math.round((overall / 100) * 44).toString(16).padStart(2, '0')
+
+  // Build live impact configs with animated values baked in as JSX
+  const cards = [
+    {
+      color:       '#6366f1',
+      icon:        '😊',
+      label:       'Customer Satisfaction',
+      primary:     <Count value={sat.recommends * 10} suffix="%" />,
+      unit:        'would recommend',
+      scoreVal:    satisfaction,
+      compareLabel: 'vs industry 50%',
+      analogyIcon: '🗣️',
+      analogy:     <>Like <Count value={sat.repeatRate} suffix="%" /> of customers returning for a second order — every month, automatically.</>,
+    },
+    {
+      color:       '#a855f7',
+      icon:        '💰',
+      label:       'Cost Efficiency',
+      primary:     cost.savingsPerK >= 0
+        ? <><span style={{ fontSize: '0.7em', opacity: 0.6 }}>+$</span><Count value={cost.savingsPerK} /></>
+        : <><span style={{ fontSize: '0.7em', color: '#ef4444' }}>−$</span><Count value={Math.abs(cost.savingsPerK)} /></>,
+      unit:        'saved per 1,000 orders',
+      scoreVal:    costHealth,
+      compareLabel: 'vs industry avg',
+      analogyIcon: '🧑‍💼',
+      analogy:     cost.savingsPerK >= 0
+        ? <>That's <Count value={cost.staffHours} suffix=" hrs" /> of skilled labour freed up every month at 10k order volume.</>
+        : <>At this pace, overspend equals <Count value={cost.staffHours} suffix=" hrs" /> of wasted operational budget monthly.</>,
+    },
+    {
+      color:       '#10b981',
+      icon:        '🌿',
+      label:       'Environmental Impact',
+      primary:     env.co2Delta <= 0
+        ? <><span style={{ fontSize: '0.7em', opacity: 0.6 }}>−</span><Count value={Math.abs(env.co2Delta * 100)} /></>
+        : <><span style={{ fontSize: '0.7em', color: '#ef4444' }}>+</span><Count value={env.co2Delta * 100} /></>,
+      unit:        'kg CO₂ per 100 deliveries',
+      scoreVal:    envImpact,
+      compareLabel: 'vs carbon baseline',
+      analogyIcon: env.co2Delta <= 0 ? '🌳' : '🚗',
+      analogy:     env.co2Delta <= 0
+        ? <>Equivalent to planting <Count value={env.treesPerMonth} suffix=" trees" /> every month — or taking <Count value={Math.round(env.carKm / 100)} suffix=" cars" /> off the road.</>
+        : <>This configuration generates the same emissions as driving <Count value={env.carKm} suffix=" km" /> extra per 100 deliveries.</>,
+    },
+  ]
 
   return (
-    // Outer: mount slide-up animation
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.0, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="sim-panel fixed bottom-6 right-10 lg:bottom-8 lg:right-14 z-50 w-[280px] lg:w-[300px]"
-      style={{ fontFamily: 'Inter, sans-serif' }}
+      className="sim-panel fixed bottom-6 right-6 lg:bottom-8 lg:right-10 z-50"
+      style={{ width: 300, fontFamily: 'Inter, sans-serif' }}
     >
       <div>
         <motion.div
           className="rounded-2xl overflow-hidden"
-          animate={{
-            boxShadow: `0 20px 60px rgba(0,0,0,0.55), 0 0 0 0.5px rgba(255,255,255,0.06), 0 0 ${glowSize}px ${overallColor}${glowAlpha}`,
-          }}
+          animate={{ boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.06), 0 0 36px ${overallColor}${glowAlpha}` }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
           style={{
             position: 'relative',
-            background: 'rgba(8, 8, 12, 0.72)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            background: 'rgba(8,8,14,0.80)',
+            backdropFilter: 'blur(22px)',
+            WebkitBackdropFilter: 'blur(22px)',
             border: '1px solid rgba(255,255,255,0.09)',
           }}
         >
-          {/* Accent line */}
+          {/* Top accent sweep */}
           <motion.div
             key={overallColor}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
+            initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-0 left-0 right-0 h-px"
-            style={{
-              background: `linear-gradient(to right, transparent, ${overallColor}90, transparent)`,
-              transformOrigin: 'left',
-            }}
+            style={{ background: `linear-gradient(to right, transparent, ${overallColor}88, transparent)`, transformOrigin: 'left' }}
           />
 
           {/* Header */}
           <button
             onClick={() => setOpen(v => !v)}
-            className="w-full flex items-center justify-between px-4 py-3.5 cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-3 cursor-pointer"
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <LiveDot />
-              <span className="text-sm font-semibold text-white">Insight Engine</span>
+              <span className="text-sm font-semibold text-white">Real-World Impact</span>
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-xs font-bold tabular-nums" style={{ color: overallColor }}>
-                <AnimatedNumber value={overall} />
-              </span>
-              <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <div className="flex items-center gap-2">
+              {/* Overall score pill */}
+              <div
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                style={{ background: `${overallColor}16`, border: `1px solid ${overallColor}30` }}
+              >
+                <span className="text-[10px] font-bold tabular-nums" style={{ color: overallColor }}>
+                  <Count value={overall} />
+                </span>
+                <span className="text-[9px] text-white/30">/100</span>
+              </div>
+              <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 6l4 4 4-4" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </motion.div>
             </div>
@@ -170,33 +238,30 @@ export default function InsightEngine({ scores, insight }) {
                 style={{ overflow: 'hidden' }}
               >
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="px-4 pt-4 pb-3 flex flex-col gap-4">
-                    <MetricRow metricKey="satisfaction" value={satisfaction} />
-                    <MetricRow metricKey="costHealth"   value={costHealth} />
-                    <MetricRow metricKey="envImpact"    value={envImpact} />
+
+                  {/* 3 impact cards */}
+                  <div className="px-3 pt-3 pb-2 flex flex-col gap-2">
+                    {cards.map((c, i) => <ImpactCard key={i} config={c} />)}
                   </div>
 
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0 16px' }} />
-
                   {/* Insight sentence */}
-                  <div className="px-4 py-3.5">
+                  <div className="mx-3 mb-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                     <AnimatePresence mode="wait">
                       <motion.p
                         key={insight}
-                        initial={{ opacity: 0, y: 6, filter: 'blur(4px)' }}
+                        initial={{ opacity: 0, y: 4, filter: 'blur(4px)' }}
                         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, y: -4, filter: 'blur(4px)' }}
-                        transition={{ duration: 0.45, ease: 'easeOut' }}
-                        className="text-xs leading-relaxed"
-                        style={{ color: 'rgba(255,255,255,0.45)' }}
+                        transition={{ duration: 0.4 }}
+                        className="text-[10px] leading-relaxed"
+                        style={{ color: 'rgba(255,255,255,0.4)' }}
                       >
-                        <span className="font-semibold" style={{ color: overallColor }}>
-                          AI Insight —{' '}
-                        </span>
+                        <span className="font-bold" style={{ color: overallColor }}>↳ </span>
                         {insight}
                       </motion.p>
                     </AnimatePresence>
                   </div>
+
                 </div>
               </motion.div>
             )}

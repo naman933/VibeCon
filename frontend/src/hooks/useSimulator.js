@@ -85,6 +85,44 @@ function deriveInsight(values, scores) {
   return map[`${top}_${bottom}`] ?? `Optimised for ${top} — review the scores below for trade-offs.`
 }
 
+// ── Real-world impact translations ───────────────────────────────────────────
+// Convert abstract 0-100 scores into tangible daily metrics people understand.
+// All figures based on e-commerce logistics industry benchmarks.
+
+export function deriveImpacts(scores) {
+  const { satisfaction, costHealth, envImpact } = scores
+
+  // ── Customer Satisfaction ──
+  // NPS equivalent: score 50 = NPS 0 (industry avg), 100 = NPS 72 (world-class)
+  const nps = Math.round((satisfaction - 50) * 1.44)
+  // Recommendation rate out of 10
+  const recommends = +(satisfaction / 10).toFixed(1)
+  // Repeat purchase rate
+  const repeatRate = Math.round(38 + (satisfaction / 100) * 52)
+
+  // ── Cost Health ──
+  // Savings vs industry baseline per 1,000 orders
+  const savingsPerK = Math.round((costHealth - 50) * 86)
+  // Monthly at 10k order volume
+  const monthlySavings = savingsPerK * 10
+  // Staff hours equivalent (avg $28/hr fully loaded)
+  const staffHours = Math.round(Math.abs(monthlySavings) / 28)
+
+  // ── Environmental Impact ──
+  // CO2 delta vs baseline (kg per 100 deliveries)
+  const co2Delta = +((envImpact - 50) * -0.98).toFixed(1)
+  // Trees equivalent (1 tree absorbs ~21 kg CO2/year → per month ≈ 1.75 kg)
+  const treesPerMonth = Math.round(Math.abs(co2Delta * 100) / 1.75)
+  // Car km equivalent (avg 0.12 kg CO2/km)
+  const carKm = Math.round(Math.abs(co2Delta * 100) / 0.12)
+
+  return {
+    satisfaction: { nps, recommends, repeatRate },
+    cost:         { savingsPerK, monthlySavings, staffHours },
+    env:          { co2Delta, treesPerMonth, carKm },
+  }
+}
+
 // ── Hook ─────────────────────────────────────────────────────────────────────
 export function useSimulator() {
   const [values, setValues] = useState(DEFAULTS)
@@ -122,5 +160,7 @@ export function useSimulator() {
     ).map(Math.round)
   }, [values])
 
-  return { values, update, reset, score, dominant, ambientRgb, scores, insight }
+  const impacts = useMemo(() => deriveImpacts(scores), [scores])
+
+  return { values, update, reset, score, dominant, ambientRgb, scores, insight, impacts }
 }

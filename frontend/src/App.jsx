@@ -21,7 +21,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState(0)
   const [hasScrolled, setHasScrolled]     = useState(false)
 
-  const { values, update, reset, score, dominant, scores, insight } = useSimulator()
+  const { values, update, reset, score, dominant, scores, insight, impacts } = useSimulator()
   const { activeStep, stepIndex, advance, dismiss, isComplete }     = useNarrative({ values, hasScrolled })
 
   // Track window scroll — NOT a ref. This never breaks fixed children.
@@ -173,7 +173,7 @@ export default function App() {
             dominant={dominant}
           />
 
-          <InsightEngine scores={scores} insight={insight} />
+          <InsightEngine scores={scores} insight={insight} impacts={impacts} />
 
           <NarrativeOverlay
             activeStep={activeStep}
